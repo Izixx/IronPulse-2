@@ -13,20 +13,10 @@ final class StatsEngineTests: XCTestCase {
 
     // MARK: - Harnais
 
+    /// Conteneur partagé (voir `TestStore`) : recréer un conteneur en mémoire
+    /// par test fait planter l'hôte de test sur iOS 26.
     private func makeContext() throws -> ModelContext {
-        let schema = Schema([
-            Exercise.self,
-            WorkoutSession.self,
-            WorkoutExercise.self,
-            SetEntry.self,
-            Routine.self,
-            RoutineDay.self,
-            RoutineDayExercise.self,
-            BodyWeightEntry.self
-        ])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: schema, configurations: configuration)
-        return container.mainContext
+        try TestStore.makeContext()
     }
 
     private func makeExercise(

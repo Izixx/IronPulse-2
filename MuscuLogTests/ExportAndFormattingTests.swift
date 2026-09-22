@@ -9,20 +9,10 @@ import XCTest
 @MainActor
 final class ExportAndFormattingTests: XCTestCase {
 
+    /// Conteneur partagé (voir `TestStore`) : recréer un conteneur en mémoire
+    /// par test fait planter l'hôte de test sur iOS 26.
     private func makeContext() throws -> ModelContext {
-        let schema = Schema([
-            Exercise.self,
-            WorkoutSession.self,
-            WorkoutExercise.self,
-            SetEntry.self,
-            Routine.self,
-            RoutineDay.self,
-            RoutineDayExercise.self,
-            BodyWeightEntry.self
-        ])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: schema, configurations: configuration)
-        return container.mainContext
+        try TestStore.makeContext()
     }
 
     private func makeSampleSession(_ context: ModelContext) -> WorkoutSession {
@@ -65,7 +55,11 @@ final class ExportAndFormattingTests: XCTestCase {
     func testWeightForRepsIsInverseOfEstimate() {
         let oneRM = OneRepMax.estimate(weight: 100, reps: 5)
         XCTAssertEqual(OneRepMax.weight(forReps: 5, from: oneRM), 100, accuracy: 0.01)
-        XCTAssertLessThan(OneRepMax.weight(forReps: 1, from: oneRM), oneRM)
+        // 1 répétition, c'est par définition le maximum : égalité attendue, pas
+        // une inégalité stricte.
+        XCTAssertEqual(OneRepMax.weight(forReps: 1, from: oneRM), oneRM, accuracy: 0.001)
+        // Au-delà d'1 rep, la charge à viser est forcément sous le max.
+        XCTAssertLessThan(OneRepMax.weight(forReps: 10, from: oneRM), oneRM)
         XCTAssertGreaterThan(OneRepMax.weight(forReps: 10, from: oneRM), 0)
     }
 
