@@ -1,6 +1,19 @@
 import SwiftData
 import SwiftUI
 
+/// Permet d'avertir l'utilisateur que la base n'a pas pu s'ouvrir sur le disque
+/// (voir `MuscuLogApp.makeContainer`) : l'app fonctionne, mais rien n'est écrit.
+private struct StorageEphemeralKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var storageIsEphemeral: Bool {
+        get { self[StorageEphemeralKey.self] }
+        set { self[StorageEphemeralKey.self] = newValue }
+    }
+}
+
 /// Navigation principale : 4 onglets, décidés pour être utilisables d'une main
 /// et sans réflexion pendant l'effort.
 enum AppTab: Hashable {
@@ -14,6 +27,7 @@ struct RootTabView: View {
 
     @Environment(ActiveSessionViewModel.self) private var sessionVM
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.storageIsEphemeral) private var storageIsEphemeral
 
     @Query(sort: [SortDescriptor(\WorkoutSession.date, order: .reverse)])
     private var sessions: [WorkoutSession]
@@ -58,6 +72,11 @@ struct RootTabView: View {
                     Label("Exercices", systemImage: "list.bullet.rectangle.portrait")
                 }
                 .tag(AppTab.library)
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if storageIsEphemeral {
+                    StorageWarningBanner()
+                }
             }
 
             if let toast = sessionVM.toast {

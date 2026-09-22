@@ -139,10 +139,22 @@ final class StatsEngineTests: XCTestCase {
     func testMuscleVolumesCoverEveryGroup() throws {
         let context = try makeContext()
         let stats = StatsViewModel()
-        let volumes = stats.muscleVolumes([])
+
+        // Un seul groupe travaillé : les autres doivent malgré tout apparaître,
+        // à zéro, sinon le camembert et le bilan d'équilibre mentiraient.
+        let squat = makeExercise(context, "Squat", [.quadriceps])
+        let session = makeSession(context, daysAgo: 0)
+        addSet(context, to: addExercise(context, to: session, squat), reps: 5, weight: 100)
+
+        let volumes = stats.muscleVolumes([session])
 
         XCTAssertEqual(volumes.count, MuscleGroup.allCases.count)
-        XCTAssertTrue(volumes.allSatisfy { $0.volume == 0 && $0.workingSets == 0 })
+        XCTAssertEqual(volumes.first { $0.group == .quadriceps }?.volume ?? 0, 500, accuracy: 0.001)
+        XCTAssertTrue(
+            volumes.filter { $0.group != .quadriceps }
+                .allSatisfy { $0.volume == 0 && $0.workingSets == 0 }
+        )
+        XCTAssertEqual(volumes.reduce(0) { $0 + $1.volume }, session.totalVolume, accuracy: 0.001)
     }
 
     // MARK: - Récupération et suggestion

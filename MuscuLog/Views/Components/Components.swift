@@ -342,6 +342,34 @@ struct ToastView: View {
     }
 }
 
+// MARK: - Avertissement de stockage volatil
+
+/// Affiché quand SwiftData n'a pas pu ouvrir la base sur le disque : l'app
+/// reste utilisable, mais **rien n'est conservé** après la fermeture. Mieux
+/// vaut le dire que de laisser croire que les séances sont enregistrées.
+struct StorageWarningBanner: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Base de données illisible")
+                    .font(.subheadline.weight(.semibold))
+                Text("Les séances ne sont pas enregistrées. Exporte tes données en JSON puis réinstalle l'app.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.14))
+        .overlay(alignment: .bottom) { Divider() }
+    }
+}
+
 // MARK: - Minuteur de repos
 
 /// Barre de repos affichée en permanence pendant la séance.

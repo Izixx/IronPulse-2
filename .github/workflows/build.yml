@@ -36,11 +36,27 @@ jobs:
           DEVICE=$(xcrun simctl list devices available -j \
             | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];n=[x['name'] for r,v in d.items() if 'iOS' in r for x in v if 'iPhone' in x['name']];print(n[0])")
           echo "Simulateur : $DEVICE"
+
+          # L'app hôte démarre son conteneur SwiftData : CoreData logue alors un
+          # long diagnostic de sandbox (dossier « Application Support » absent
+          # au premier lancement dans un conteneur neuf) qui noie le résultat
+          # des tests sans qu'aucun test soit en cause. On l'écarte, mais on
+          # compte les lignes écartées pour ne pas masquer une vraie panne.
+          LOG=/tmp/musculog-tests.log
+          set +e
           xcodebuild test \
             -project MuscuLog.xcodeproj \
             -scheme MuscuLog \
             -destination "platform=iOS Simulator,name=$DEVICE" \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$LOG" | grep -v 'CoreData:'
+          STATUS=${PIPESTATUS[0]}
+          set -e
+
+          echo "Lignes de diagnostic CoreData filtrées : $(grep -c 'CoreData:' "$LOG" || true)"
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Tests en échec (code $STATUS) — voir les lignes ci-dessus."
+          fi
+          exit "$STATUS"
 
   # ---------------------------------------------------------------------------
   # IPA non signé -> à télécharger depuis l'onglet Actions puis à installer
