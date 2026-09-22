@@ -7,6 +7,10 @@ import Foundation
 /// Un export régulier est la seule sauvegarde fiable.
 enum ExportService {
 
+    /// Version du format d'export. À incrémenter si la structure du JSON change,
+    /// pour qu'un futur import sache à quoi il a affaire.
+    static let formatVersion = "1"
+
     // MARK: - DTO (jamais les modèles SwiftData directement)
 
     struct Payload: Codable {
@@ -91,7 +95,7 @@ enum ExportService {
     ) -> Payload {
         Payload(
             app: "MuscuLog",
-            version: 1,
+            version: formatVersion,
             exportedAt: .now,
             exercises: exercises.map { exercise in
                 ExerciseDTO(

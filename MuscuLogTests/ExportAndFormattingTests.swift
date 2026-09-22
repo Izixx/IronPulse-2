@@ -156,6 +156,7 @@ final class ExportAndFormattingTests: XCTestCase {
         let decoded = try decoder.decode(ExportService.Payload.self, from: data)
 
         XCTAssertEqual(decoded.app, "MuscuLog")
+        XCTAssertEqual(decoded.version, ExportService.formatVersion)
         XCTAssertEqual(decoded.sessions.count, 1)
         XCTAssertEqual(decoded.bodyWeights.first?.kilograms, 78.4)
         XCTAssertEqual(decoded.exercises.first?.name, "Développé couché")
