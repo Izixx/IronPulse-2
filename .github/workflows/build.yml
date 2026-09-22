@@ -1,0 +1,107 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "**.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ---------------------------------------------------------------------------
+  # Vérification de la logique métier sur simulateur (rapide, aucune signature)
+  # ---------------------------------------------------------------------------
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode
+        run: xcodebuild -version
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      - name: Générer le projet Xcode
+        run: xcodegen generate
+
+      - name: Lancer les tests
+        run: |
+          set -euo pipefail
+          DEVICE=$(xcrun simctl list devices available -j \
+            | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];n=[x['name'] for r,v in d.items() if 'iOS' in r for x in v if 'iPhone' in x['name']];print(n[0])")
+          echo "Simulateur : $DEVICE"
+          xcodebuild test \
+            -project MuscuLog.xcodeproj \
+            -scheme MuscuLog \
+            -destination "platform=iOS Simulator,name=$DEVICE" \
+            CODE_SIGNING_ALLOWED=NO
+
+  # ---------------------------------------------------------------------------
+  # IPA non signé -> à télécharger depuis l'onglet Actions puis à installer
+  # avec Sideloadly (Sideloadly apporte la signature).
+  # ---------------------------------------------------------------------------
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+
+      - name: Générer le projet Xcode
+        run: xcodegen generate
+
+      - name: Build sans signature
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project MuscuLog.xcodeproj \
+            -scheme MuscuLog \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            ONLY_ACTIVE_ARCH=NO \
+            clean build
+
+      - name: Créer le .ipa
+        run: |
+          set -euo pipefail
+          APP_PATH="build/Build/Products/Release-iphoneos/MuscuLog.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "::error::$APP_PATH introuvable, le build a échoué."
+            exit 1
+          fi
+          rm -rf Payload MuscuLog.ipa
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          # Sideloadly refuse un bundle déjà signé pour rien : on s'assure
+          # qu'aucune signature résiduelle ne traîne dans l'app.
+          rm -rf Payload/MuscuLog.app/_CodeSignature
+          zip -qry MuscuLog.ipa Payload
+          ls -lh MuscuLog.ipa
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MuscuLog-ipa
+          path: MuscuLog.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publier les dSYM (débogage des crashs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MuscuLog-dSYM
+          path: build/Build/Products/Release-iphoneos/*.dSYM
+          if-no-files-found: ignore
+          retention-days: 7

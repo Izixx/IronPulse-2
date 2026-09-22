@@ -1,0 +1,26 @@
+# Métadonnées de l'espace de travail (ne fait pas partie du projet)
+.freebuff/
+
+# Projet Xcode généré par XcodeGen (project.yml est la source de vérité)
+*.xcodeproj
+*.xcworkspace
+
+# Build
+build/
+DerivedData/
+Payload/
+*.ipa
+*.dSYM.zip
+
+# macOS
+.DS_Store
+._*
+
+# Xcode utilisateur
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Signing local
+*.mobileprovision
+*.p12
