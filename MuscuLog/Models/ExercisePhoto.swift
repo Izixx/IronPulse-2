@@ -24,7 +24,7 @@ extension Exercise {
     var thumbnail: UIImage? {
         if let cachedThumbnail { return cachedThumbnail }
         let image: UIImage?
-        if let thumbData, let decoded = UIImage(data: thumbData) {
+        if let thumbnailData, let decoded = UIImage(data: thumbnailData) {
             image = decoded
         } else if let photo {
             image = ImageStore.makeListThumbnail(from: photo)

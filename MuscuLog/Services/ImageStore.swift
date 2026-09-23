@@ -58,6 +58,8 @@ enum ImageStore {
     // MARK: - Distant
 
     /// Charge une image distante (URL de référence), avec cache mémoire.
+    /// Appelée depuis la vue (MainActor) ; le callback arrive sur MainActor.
+    @MainActor
     static func loadRemote(_ urlString: String, completion: @escaping @MainActor (UIImage?) -> Void) {
         if let cached = remoteCache.object(forKey: urlString as NSString) {
             completion(cached)
