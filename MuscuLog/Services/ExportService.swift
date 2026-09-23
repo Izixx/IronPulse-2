@@ -29,6 +29,8 @@ enum ExportService {
         var muscleGroups: [String]
         var equipment: String?
         var isCustom: Bool
+        /// URL d'image de référence (les photos locales restent sur l'appareil).
+        var remoteImageURL: String?
     }
 
     struct SessionDTO: Codable {
@@ -103,7 +105,8 @@ enum ExportService {
                     name: exercise.name,
                     muscleGroups: exercise.muscleGroups.map(\.title),
                     equipment: exercise.equipment,
-                    isCustom: exercise.isCustom
+                    isCustom: exercise.isCustom,
+                    remoteImageURL: exercise.remoteImageURL
                 )
             },
             sessions: sessions.map { session in

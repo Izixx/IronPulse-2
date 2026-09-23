@@ -79,6 +79,15 @@ struct ExerciseDetailView: View {
     private var headerCard: some View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
+                if let photo = exercise.photo {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 200)
+                        .clipShape(.rect(cornerRadius: 12))
+                        .accessibilityLabel("Photo de l'exercice")
+                }
                 HStack(spacing: 5) {
                     ForEach(exercise.muscleGroups) { group in
                         MuscleTag(group: group)

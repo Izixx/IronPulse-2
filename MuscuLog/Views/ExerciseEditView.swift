@@ -1,11 +1,14 @@
 import SwiftData
 import SwiftUI
 
-/// Création / édition d'un exercice (nom, groupes musculaires, équipement).
+/// Création / édition d'un exercice : nom, groupes musculaires, équipement,
+/// photo de la machine (ex. Technogym du club) et URL d'image de référence.
 struct ExerciseEditView: View {
 
     /// `nil` pour une création.
     let exercise: Exercise?
+    /// Photo prise en amont (ex. « Photographier une machine » du picker).
+    var initialImage: UIImage? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -13,6 +16,11 @@ struct ExerciseEditView: View {
     @State private var name: String = ""
     @State private var muscleGroups: Set<MuscleGroup> = []
     @State private var equipment: String = ""
+    @State private var remoteURL: String = ""
+    @State private var pendingImage: UIImage?
+    @State private var removedPhoto = false
+    @State private var activePhotoSource: ExercisePhotoPicker.Source?
+    @State private var cameraUnavailableAlert = false
     @State private var didLoad = false
 
     private var isEditing: Bool { exercise != nil }
@@ -58,6 +66,8 @@ struct ExerciseEditView: View {
                     TextField("Barre, haltères, machine, poulie…", text: $equipment)
                         .autocorrectionDisabled()
                 }
+
+                photoSection
             }
             .navigationTitle(isEditing ? "Modifier l'exercice" : "Nouvel exercice")
             .navigationBarTitleDisplayMode(.inline)
@@ -71,6 +81,95 @@ struct ExerciseEditView: View {
                 }
             }
             .onAppear(perform: load)
+            .sheet(item: $activePhotoSource) { source in
+                ExercisePhotoPicker(source: source) { image in
+                    pendingImage = image
+                    removedPhoto = false
+                    Haptics.success()
+                }
+                .ignoresSafeArea()
+            }
+            .alert("Appareil photo indisponible", isPresented: $cameraUnavailableAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("La photothèque reste disponible pour associer une image à cet exercice.")
+            }
+        }
+    }
+
+    // MARK: - Section photo
+
+    private var photoSection: some View {
+        Section {
+            if let preview {
+                VStack(spacing: 10) {
+                    Image(uiImage: preview)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 200)
+                        .clipShape(.rect(cornerRadius: 12))
+                        .accessibilityLabel("Photo de l'exercice")
+                    HStack(spacing: 10) {
+                        photoButton("Reprendre", "camera.fill", .camera)
+                        photoButton("Photothèque", "photo.on.rectangle", .library)
+                        Button(role: .destructive) {
+                            pendingImage = nil
+                            removedPhoto = true
+                            remoteURL = ""
+                            Haptics.tap()
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.vertical, 4)
+            } else {
+                VStack(spacing: 10) {
+                    Image(systemName: "camera.viewfinder")
+                        .font(.system(size: 34))
+                        .foregroundStyle(.secondary)
+                    Text("Photographie ta machine pour la reconnaître d'un coup d'œil")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    HStack(spacing: 10) {
+                        photoButton("Caméra", "camera.fill", .camera)
+                        photoButton("Photothèque", "photo.on.rectangle", .library)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            }
+        } header: {
+            Text("Photo de l'appareil")
+        } footer: {
+            Text("La photo est compressée et reste sur ton téléphone. Une URL d'image (site du constructeur, réservoir…) peut servir de référence en complément.")
+        }
+    }
+
+    /// Aperçu : nouvelle photo pending, sinon photo existante (sauf si supprimée).
+    private var preview: UIImage? {
+        if let pendingImage { return pendingImage }
+        if removedPhoto { return nil }
+        return exercise?.photo
+    }
+
+    private func photoButton(
+        _ title: String,
+        _ systemImage: String,
+        _ source: ExercisePhotoPicker.Source
+    ) -> some View {
+        Button {
+            if source == .camera, !UIImagePickerController.isSourceTypeAvailable(.camera) {
+                cameraUnavailableAlert = true
+                return
+            }
+            activePhotoSource = source
+        } label: {
+            Label(title, systemImage: systemImage)
         }
     }
 
@@ -86,28 +185,39 @@ struct ExerciseEditView: View {
     private func load() {
         guard !didLoad else { return }
         didLoad = true
-        guard let exercise else { return }
-        name = exercise.name
-        muscleGroups = Set(exercise.muscleGroups)
-        equipment = exercise.equipment ?? ""
+        if let exercise {
+            name = exercise.name
+            muscleGroups = Set(exercise.muscleGroups)
+            equipment = exercise.equipment ?? ""
+            remoteURL = exercise.remoteImageURL ?? ""
+        } else if let initialImage {
+            pendingImage = initialImage
+        }
     }
 
     private func save() {
         let groups = MuscleGroup.allCases.filter { muscleGroups.contains($0) }
         let trimmedEquipment = equipment.trimmed
+        let target = exercise ?? Exercise(
+            name: name.trimmed,
+            muscleGroups: groups,
+            equipment: trimmedEquipment.isEmpty ? nil : trimmedEquipment,
+            isCustom: true
+        )
 
-        if let exercise {
-            exercise.name = name.trimmed
-            exercise.setMuscleGroups(groups)
-            exercise.equipment = trimmedEquipment.isEmpty ? nil : trimmedEquipment
-        } else {
-            let created = Exercise(
-                name: name.trimmed,
-                muscleGroups: groups,
-                equipment: trimmedEquipment.isEmpty ? nil : trimmedEquipment,
-                isCustom: true
-            )
-            context.insert(created)
+        target.name = name.trimmed
+        target.setMuscleGroups(groups)
+        target.equipment = trimmedEquipment.isEmpty ? nil : trimmedEquipment
+        target.setRemoteImageURL(remoteURL)
+
+        if removedPhoto {
+            target.setPhoto(nil)
+        } else if let pendingImage {
+            target.setPhoto(pendingImage)
+        }
+
+        if exercise == nil {
+            context.insert(target)
         }
 
         try? context.save()

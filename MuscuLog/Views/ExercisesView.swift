@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// Bibliothèque d'exercices : recherche, filtres par groupe musculaire,
 /// création et accès au détail (records + courbes).
@@ -114,17 +115,20 @@ struct ExercisesView: View {
     }
 
     private func row(for exercise: Exercise) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(exercise.name)
-                .font(.subheadline.weight(.medium))
-            HStack(spacing: 4) {
-                ForEach(exercise.muscleGroups) { group in
-                    MuscleTag(group: group)
-                }
-                if let equipment = exercise.equipment {
-                    Text(equipment)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+        HStack(alignment: .center, spacing: 10) {
+            ExerciseThumbView(exercise: exercise, size: 44)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(exercise.name)
+                    .font(.subheadline.weight(.medium))
+                HStack(spacing: 4) {
+                    ForEach(exercise.muscleGroups) { group in
+                        MuscleTag(group: group)
+                    }
+                    if let equipment = exercise.equipment {
+                        Text(equipment)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }

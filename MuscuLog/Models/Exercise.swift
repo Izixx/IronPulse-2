@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UIKit
 
 /// Un mouvement de la bibliothèque (prérempli ou créé par l'utilisateur).
 @Model
@@ -15,6 +16,20 @@ final class Exercise {
     /// On archive au lieu de supprimer : l'historique reste intact.
     var isArchived: Bool = false
     var createdAt: Date = Date()
+
+    // MARK: - Photo (logique dans ExercisePhoto.swift)
+
+    /// Photo JPEG de l'appareil, stockée hors base pour ne pas gonfler le
+    /// conteneur SwiftData ni le fichier d'export JSON.
+    @Attribute(.externalStorage) var photoData: Data? = nil
+    /// Vignette carrée basse résolution pour les listes.
+    @Attribute(.externalStorage) var thumbnailData: Data? = nil
+    /// URL d'une image de référence (facultative).
+    var remoteImageURL: String? = nil
+    /// Caches mémoire (non persistés) — `internal` car utilisés par
+    /// l'extension du fichier ExercisePhoto.swift.
+    @Transient var cachedPhoto: UIImage? = nil
+    @Transient var cachedThumbnail: UIImage? = nil
 
     /// Supprimer un exercice ne doit jamais effacer l'historique : les séries
     /// passées survivent, elles perdent juste leur libellé.
@@ -35,6 +50,9 @@ final class Exercise {
         self.isCustom = isCustom
         self.isArchived = false
         self.createdAt = createdAt
+        self.photoData = nil
+        self.thumbnailData = nil
+        self.remoteImageURL = nil
     }
 
     var muscleGroups: [MuscleGroup] {

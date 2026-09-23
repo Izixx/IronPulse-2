@@ -21,6 +21,11 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 
+	<!-- Photo des machines : la photothèque (PHPicker) ne demande aucune
+	     permission ; seule la caméra en exige une. -->
+	<key>NSCameraUsageDescription</key>
+	<string>MuscuLog utilise la caméra pour photographier tes machines et les reconnaître d'un coup d'œil dans la bibliothèque d'exercices.</string>
+
 	<!-- HealthKit : ces clés sont inoffensives tant que le code HealthKit
 	     n'est pas activé (HEALTHKIT_ENABLED, compte développeur payant). -->
 	<key>NSHealthShareUsageDescription</key>

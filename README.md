@@ -63,6 +63,13 @@ sideload depuis Windows, sans Mac.
 - Recherche **insensible aux accents** (« developpe » trouve « Développé couché »).
 - Création de ses propres exercices (nom, plusieurs groupes musculaires,
   équipement).
+- **Photos de tes machines** : photographie l'appareil (caméra ou photothèque)
+  ou colle une URL d'image de référence. Dans le sélecteur d'exercice, l'onglet
+  **« Photos »** affiche une grille de tes machines photographiées — tu
+  sélectionnes celle que tu as sous les yeux d'un tap, et le bouton
+  « Photographier une machine » crée un nouvel exercice avec sa photo en un
+  seul flux. Les photos sont compressées (long bord 1280 px) et restent sur
+  l'appareil ; seul le champ URL figure dans l'export JSON.
 - **Records par exercice** : charge max, **1RM estimé** (Epley), meilleur volume
   en une séance, meilleures reps, charge conseillée pour viser 8 répétitions.
 - **Courbes de progression** : charge max, 1RM estimé, volume, répétitions.
