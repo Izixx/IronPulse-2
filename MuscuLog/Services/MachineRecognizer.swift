@@ -130,7 +130,9 @@ enum MachineRecognizer {
                 userInfo: [NSLocalizedDescriptionKey: "Image invalide"]
             )
         }
-        let request = VNGenerateImageFeaturePrintRequest(options: [:])
+        // NB : le SDK iOS 26 n'expose pas d'initialiseur avec `options:`
+        // sur cette requête — `init()` seul est valide.
+        let request = VNGenerateImageFeaturePrintRequest()
         let handler = VNImageRequestHandler(
             cgImage: cgImage,
             orientation: orientation(of: image),
@@ -161,7 +163,7 @@ enum MachineRecognizer {
             options: [:]
         )
         guard (try? handler.perform([request])) != nil,
-              let observations = request.results as? [VNClassificationObservation] else {
+              let observations = request.results else {
             return nil
         }
         let labels = observations.filter { $0.confidence > 0.2 }.map(\.identifier)
