@@ -2,21 +2,9 @@ import SwiftData
 import SwiftUI
 import UIKit
 
-/// Photo en attente d'affectation (wrapper `Identifiable` pour `sheet(item:)`).
-struct PendingExercisePhoto: Identifiable {
-    let id = UUID()
-    let image: UIImage
-}
-
-/// Source de photo en attente d'ouverture (idem, pour le `sheet(item:)`).
-struct PendingPhotoSource: Identifiable {
-    let id = UUID()
-    let source: ExercisePhotoPicker.Source
-}
-
 /// Sélecteur d'exercice pour la séance en cours : recherche instantanée,
-/// filtres par groupe musculaire, onglet « Photos » (tes machines), et
-/// création rapide — y compris en photographiant la machine utilisée.
+/// filtres par groupe musculaire, onglet « Photos » (tes machines),
+/// reconnaissance de machine par photo et création rapide.
 struct ExercisePickerView: View {
 
     let onPick: (Exercise) -> Void
@@ -36,7 +24,8 @@ struct ExercisePickerView: View {
     @State private var showingPhotos = false
     @State private var showingSourceDialog = false
     @State private var cameraUnavailable = false
-    @State private var pendingCreationPhoto: PendingExercisePhoto?
+    /// Photo en attente d'analyse (reconnaissance de machine).
+    @State private var pendingMachinePhoto: PendingExercisePhoto?
     @State private var activeCreationSource: PendingPhotoSource?
 
     private var filtered: [Exercise] {
@@ -103,12 +92,19 @@ struct ExercisePickerView: View {
             .sheet(isPresented: $isCreating) {
                 ExerciseEditView(exercise: nil)
             }
-            .sheet(item: $pendingCreationPhoto) { photo in
-                ExerciseEditView(exercise: nil, initialImage: photo.image)
+            .sheet(item: $pendingMachinePhoto) { photo in
+                MachineMatchView(
+                    image: photo.image,
+                    library: Array(exercises),
+                    onPick: { exercise in
+                        onPick(exercise)
+                        dismiss()
+                    }
+                )
             }
             .sheet(item: $activeCreationSource) { pending in
                 ExercisePhotoPicker(source: pending.source) { image in
-                    pendingCreationPhoto = PendingExercisePhoto(image: image)
+                    pendingMachinePhoto = PendingExercisePhoto(image: image)
                 }
                 .ignoresSafeArea()
             }
@@ -125,7 +121,7 @@ struct ExercisePickerView: View {
                 }
                 Button("Annuler", role: .cancel) {}
             } message: {
-                Text("La photo est associée à l'exercice : tu retrouveras la machine d'un coup d'œil.")
+                Text("L'app reconnaît la machine et te propose les exercices à faire dessus.")
             }
             .alert("Appareil photo indisponible", isPresented: $cameraUnavailable) {
                 Button("OK", role: .cancel) {}

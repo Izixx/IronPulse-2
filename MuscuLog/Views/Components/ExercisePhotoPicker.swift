@@ -1,6 +1,18 @@
 import PhotosUI
 import SwiftUI
 
+/// Photo en attente d'affectation (wrapper `Identifiable` pour `sheet(item:)`).
+struct PendingExercisePhoto: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
+
+/// Source de photo en attente d'ouverture (idem, pour le `sheet(item:)`).
+struct PendingPhotoSource: Identifiable {
+    let id = UUID()
+    let source: ExercisePhotoPicker.Source
+}
+
 extension ExercisePhotoPicker.Source: Identifiable {
     var id: Self { self }
 }

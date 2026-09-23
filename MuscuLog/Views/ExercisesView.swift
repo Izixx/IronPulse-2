@@ -15,6 +15,10 @@ struct ExercisesView: View {
     @State private var searchText = ""
     @State private var selectedGroup: MuscleGroup?
     @State private var isCreating = false
+    @State private var machinePhoto: PendingExercisePhoto?
+    @State private var showingSourceDialog = false
+    @State private var cameraUnavailable = false
+    @State private var activePhotoSource: PendingPhotoSource?
 
     private var filtered: [Exercise] {
         exercises.filter { exercise in
@@ -64,15 +68,55 @@ struct ExercisesView: View {
         .safeAreaInset(edge: .top) { groupFilterBar }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isCreating = true
-                } label: {
-                    Image(systemName: "plus")
+                HStack(spacing: 12) {
+                    Button {
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            showingSourceDialog = true
+                        } else {
+                            cameraUnavailable = true
+                        }
+                    } label: {
+                        Image(systemName: "camera.viewfinder")
+                    }
+                    Button {
+                        isCreating = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                 }
             }
         }
         .sheet(isPresented: $isCreating) {
             ExerciseEditView(exercise: nil)
+        }
+        .sheet(item: $machinePhoto) { photo in
+            MachineMatchView(image: photo.image, library: exercises)
+        }
+        .sheet(item: $activePhotoSource) { pending in
+            ExercisePhotoPicker(source: pending.source) { image in
+                machinePhoto = PendingExercisePhoto(image: image)
+            }
+            .ignoresSafeArea()
+        }
+        .confirmationDialog(
+            "Reconnaître une machine",
+            isPresented: $showingSourceDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Prendre une photo", systemImage: "camera.fill") {
+                activePhotoSource = PendingPhotoSource(source: .camera)
+            }
+            Button("Choisir dans la photothèque", systemImage: "photo.on.rectangle") {
+                activePhotoSource = PendingPhotoSource(source: .library)
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("L'app reconnaît la machine et te propose les exercices à faire dessus.")
+        }
+        .alert("Appareil photo indisponible", isPresented: $cameraUnavailable) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Utilise la photothèque pour associer une image.")
         }
     }
 

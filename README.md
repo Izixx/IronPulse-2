@@ -63,13 +63,17 @@ sideload depuis Windows, sans Mac.
 - Recherche **insensible aux accents** (« developpe » trouve « Développé couché »).
 - Création de ses propres exercices (nom, plusieurs groupes musculaires,
   équipement).
-- **Photos de tes machines** : photographie l'appareil (caméra ou photothèque)
-  ou colle une URL d'image de référence. Dans le sélecteur d'exercice, l'onglet
-  **« Photos »** affiche une grille de tes machines photographiées — tu
-  sélectionnes celle que tu as sous les yeux d'un tap, et le bouton
-  « Photographier une machine » crée un nouvel exercice avec sa photo en un
-  seul flux. Les photos sont compressées (long bord 1280 px) et restent sur
-  l'appareil ; seul le champ URL figure dans l'export JSON.
+- **Reconnaissance de machine par photo** : photographie l'appareil devant
+  toi (caméra ou photothèque) et l'app le reconnaît — d'abord **ta machine**
+  si tu l'as déjà photographiée (empreinte visuelle Vision, 100 % local),
+  sinon son **type** (chest press, leg press, tirage vertical…), et te
+  propose directement **les exercices à faire dessus**. En dernier recours,
+  tu choisis le type dans la liste des machines mainstream (Fitness Park /
+  Technogym). La création d'exercice est préremplie (nom, muscles,
+  équipement). Dans le sélecteur d'exercice, l'onglet **« Photos »** affiche
+  la grille de tes machines photographiées — sélection d'un tap ; une URL
+  d'image de référence peut compléter la photo (seule l'URL figure dans
+  l'export JSON, les photos restent sur l'appareil).
 - **Records par exercice** : charge max, **1RM estimé** (Epley), meilleur volume
   en une séance, meilleures reps, charge conseillée pour viser 8 répétitions.
 - **Courbes de progression** : charge max, 1RM estimé, volume, répétitions.

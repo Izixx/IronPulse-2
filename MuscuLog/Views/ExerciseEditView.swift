@@ -9,6 +9,9 @@ struct ExerciseEditView: View {
     let exercise: Exercise?
     /// Photo prise en amont (ex. « Photographier une machine » du picker).
     var initialImage: UIImage? = nil
+    /// Famille de machine reconnue sur `initialImage` : préremplit nom,
+    /// muscles et équipement (création guidée).
+    var initialFamily: MachineFamily? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -190,8 +193,16 @@ struct ExerciseEditView: View {
             muscleGroups = Set(exercise.muscleGroups)
             equipment = exercise.equipment ?? ""
             remoteURL = exercise.remoteImageURL ?? ""
-        } else if let initialImage {
-            pendingImage = initialImage
+        } else {
+            // Création guidée depuis une machine reconnue : préremplissage.
+            if let initialFamily {
+                name = initialFamily.suggestedName
+                muscleGroups = Set(initialFamily.muscleGroups)
+                equipment = "Machine"
+            }
+            if let initialImage {
+                pendingImage = initialImage
+            }
         }
     }
 
