@@ -189,8 +189,28 @@ final class StatsEngineTests: XCTestCase {
         let older = makeSession(context, daysAgo: 10)
         addSet(context, to: addExercise(context, to: older, chest), reps: 8, weight: 80)
 
-        let suggestion = stats.suggestion(allSessions: [recent, older], activeRoutine: nil)
-        XCTAssertEqual(suggestion.groups.first?.group, .pectoraux)
+        // Les 8 autres groupes sont entraînés hier : ils passent « en
+        // récupération » et sortent de la suggestion. Sans cette séance ils
+        // seraient « jamais travaillés » (score 1 000, devant un muscle en
+        // retard), ce qui n'est pas ce que ce test cherche à vérifier.
+        let filler = makeSession(context, daysAgo: 1)
+        let fillerExercises: [(String, [MuscleGroup])] = [
+            ("Rowing", [.dos]),
+            ("Développé militaire", [.epaules]),
+            ("Curl biceps", [.biceps]),
+            ("Extension triceps", [.triceps]),
+            ("Leg curl", [.ischioJambiers]),
+            ("Mollets debout", [.mollets]),
+            ("Hip thrust", [.fessiers]),
+            ("Crunch", [.abdominaux]),
+        ]
+        for (name, groups) in fillerExercises {
+            let exercise = makeExercise(context, name, groups)
+            addSet(context, to: addExercise(context, to: filler, exercise), reps: 10, weight: 20)
+        }
+
+        let suggestion = stats.suggestion(allSessions: [recent, older, filler], activeRoutine: nil)
+        XCTAssertEqual(suggestion.groups.map(\.group), [.pectoraux])
         XCTAssertFalse(suggestion.allRecovering)
     }
 

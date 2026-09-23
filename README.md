@@ -117,14 +117,28 @@ dépôt privé).
 
 ### Mise en place (une seule fois)
 
+Crée d'abord le dépôt sur GitHub, **vide** (sans README ni .gitignore : ils
+créeraient un conflit au premier push). Rends-le public : sur un dépôt privé,
+les minutes des runners macOS sont décomptées ×10 sur le quota gratuit.
+
 ```bash
-cd musculog
+cd IronPulse-2
 git init
 git add .
 git commit -m "App de suivi de musculation"
-git remote add origin https://github.com/TON_COMPTE/musculog.git
-git push -u origin main
+git remote add origin https://github.com/Izixx/IronPulse-2.git
+git push -u origin master
 ```
+
+Si un mauvais remote a déjà été enregistré :
+
+```bash
+git remote set-url origin https://github.com/Izixx/IronPulse-2.git
+```
+
+`Repository not found` ne veut pas dire « dépôt privé » : GitHub renvoie la même
+erreur quand le dépôt **n'existe pas** ou quand le remote pointe vers un autre
+nom. Vérifie l'URL du remote avant de suspecter tes identifiants.
 
 ### Récupérer l'IPA
 
